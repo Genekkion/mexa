@@ -87,9 +87,34 @@ func (s *Service) callbackAttachCase(ctx context.Context, u chatdomain.Update) (
 		return s.callbackAttachCaseSelect(ctx, u, data)
 	} else if strings.HasPrefix(data, "offset:") {
 		return s.callbackAttachCaseOffset(ctx, u, data)
+	} else if strings.HasPrefix(data, "confirm:") {
+		return s.callbackAttachCaseConfirm(ctx, u, data)
 	}
 
 	return nil
+}
+
+func (s *Service) callbackAttachCaseConfirm(ctx context.Context, u chatdomain.Update, data string) (err error) {
+	arr := strings.Split(data, ":")
+	if len(arr) != 2 {
+		return fmt.Errorf("invalid confirm callback data: %s", data)
+	}
+	cadet4dStr, caseIdStr := arr[0], arr[1]
+	cadet4d, err := strconv.Atoi(cadet4dStr)
+	if err != nil {
+		return err
+	}
+	caseId, err := strconv.Atoi(caseIdStr)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.repos.Casualties.AddCasualty(ctx, s.Exercise().Id, cadet4d, caseId)
+	if err != nil {
+		return err
+	}
+
+	return s.bot.Reply(ctx, u.ChatId(), "Case attached successfully")
 }
 
 func (s *Service) callbackAttachCaseOffset(ctx context.Context, u chatdomain.Update, data string) (err error) {
@@ -147,15 +172,11 @@ func (s *Service) callbackAttachCaseSelect(ctx context.Context, u chatdomain.Upd
 		return err
 	}
 
+	defer s.fsm.SetUserState(u.UserId(), fsmports.UserStateDefault)
+
 	_, err = s.repos.Casualties.GetCasualtyBy4D(ctx, s.Exercise().Id, cadet4d)
 	if err == nil {
-		s.fsm.SetUserState(u.UserId(), fsmports.UserStateDefault)
 		return s.bot.Reply(ctx, u.ChatId(), "Unable to attach, this cadet already has a case attached")
-	}
-
-	_, err = s.repos.Casualties.AddCasualty(ctx, s.Exercise().Id, cadet4d, caseId)
-	if err != nil {
-		return err
 	}
 
 	s.fsm.SetUserState(u.UserId(), fsmports.UserStateDefault)
@@ -165,9 +186,13 @@ func (s *Service) callbackAttachCaseSelect(ctx context.Context, u chatdomain.Upd
 		return err
 	}
 
-	kb, err := s.kbCasualtyCheckCasualty(ctx, u, cadet4d)
-	if err != nil {
-		return err
+	kb := [][]chatdomain.InlineKeyboardEntry{
+		{
+			{
+				Text:         "Confirm",
+				CallbackData: fmt.Sprintf("%s::confirm:%d:%d", attachCasePrefix, cadet4d, caseId),
+			},
+		},
 	}
 
 	return s.bot.Reply(ctx, u.ChatId(), c.TgMd2(), chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{

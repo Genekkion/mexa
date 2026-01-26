@@ -65,8 +65,6 @@ func (s *Service) caseCheckListData(cs []mexadomain.Casualty) (res *string, rmk 
 	const kbWidth = 3
 	const kbHeight = 3
 
-	//const kbArea = kbWidth * kbHeight
-
 	ikb := make([][]chatdomain.InlineKeyboardEntry, 0, (len(cs)/kbHeight)+1)
 	kb := make([]chatdomain.InlineKeyboardEntry, 0, kbWidth)
 	for _, c := range cs {
