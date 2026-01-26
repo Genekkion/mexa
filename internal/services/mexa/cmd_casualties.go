@@ -46,12 +46,7 @@ func (s *Service) caseCheckListData(cs []mexadomain.Casualty) (res *string, rmk 
 			case mexadomain.CCLogTypeTreatStart:
 				status = "At BCS"
 			case mexadomain.CCLogTypeTreatEnd:
-				switch *last.Value.Outcome {
-				case mexadomain.CCLogEndOutcomeSuccess:
-					status = "Awaiting evacuation"
-				case mexadomain.CCLogEndOutcomeFailure:
-					status = "Dead"
-				}
+				status = last.Value.Outcome.String()
 			default:
 				return nil, nil, fmt.Errorf("unknown log type: %s", last.Type)
 			}
@@ -69,6 +64,7 @@ func (s *Service) caseCheckListData(cs []mexadomain.Casualty) (res *string, rmk 
 
 	const kbWidth = 3
 	const kbHeight = 3
+
 	//const kbArea = kbWidth * kbHeight
 
 	ikb := make([][]chatdomain.InlineKeyboardEntry, 0, (len(cs)/kbHeight)+1)
@@ -249,52 +245,3 @@ func (s *Service) callbackCasualtyCheck(ctx context.Context, u chatdomain.Update
 	fmt.Println("Unknown casualty check callback:", u.CallbackQuery.Data)
 	return nil
 }
-
-//cases, str, err := s.getCasesList(ctx)
-//if err != nil {
-//return err
-//}
-//
-//str = fmt.Sprintf("Attached cases for cadet %s:\n\n%s", cadet4D, str)
-//
-//const kbWidth = 3
-//const kbHeight = 3
-//const kbArea = kbWidth * kbHeight
-//
-//ikb := make([][]InlineKeyboardEntry, 0, (len(cases)/kbWidth)+1)
-//{
-//
-//kb := make([]InlineKeyboardEntry, 0, kbWidth)
-//for i := range min(len(cases), kbArea) {
-//c := cases[i]
-//kb = append(kb, InlineKeyboardEntry{
-//Text:         fmt.Sprintf("Case #%d", c.Id),
-//CallbackData: fmt.Sprintf("%s::select:%d", attachCasePrefix, c.Id),
-//})
-//if len(kb) == kbWidth {
-//ikb = append(ikb, kb)
-//kb = make([]InlineKeyboardEntry, 0, kbWidth)
-//}
-//}
-//if len(kb) > 0 {
-//ikb = append(ikb, kb)
-//}
-//
-//if len(cases) > kbArea {
-//kb = []InlineKeyboardEntry{
-//{
-//Text:         "-",
-//CallbackData: fmt.Sprintf("%s::ignore", attachCasePrefix),
-//},
-//{
-//Text:         "Next",
-//CallbackData: fmt.Sprintf("%s::offset:1", attachCasePrefix),
-//},
-//}
-//ikb = append(ikb, kb)
-//}
-//}
-//
-//return s.bot.Reply(ctx, u.ChatId(), str, WithReplyMarkup(ReplyMarkup{
-//InlineKeyboard: ikb,
-//}))

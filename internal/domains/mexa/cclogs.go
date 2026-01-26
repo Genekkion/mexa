@@ -27,18 +27,39 @@ type CCLogEndOutcome string
 
 const (
 	CCLogEndOutcomeUnknown CCLogEndOutcome = ""
-	CCLogEndOutcomeSuccess CCLogEndOutcome = "success"
-	CCLogEndOutcomeFailure CCLogEndOutcome = "failure"
+	CCLogEndOutcomeP1      CCLogEndOutcome = "p1"
+	CCLogEndOutcomeP2      CCLogEndOutcome = "p2"
+	CCLogEndOutcomeP3      CCLogEndOutcome = "p3"
+	CCLogEndOutcomeP4      CCLogEndOutcome = "p4"
 )
 
-func ParseCCLogEndOutcome(s string) (res CCLogEndOutcome, err error) {
+func (s CCLogEndOutcome) String() string {
 	switch s {
-	case "success":
-		return CCLogEndOutcomeSuccess, nil
-	case "failure":
-		return CCLogEndOutcomeFailure, nil
+	case CCLogEndOutcomeP1:
+		return "P1"
+	case CCLogEndOutcomeP2:
+		return "P2"
+	case CCLogEndOutcomeP3:
+		return "P3"
+	case CCLogEndOutcomeP4:
+		return "P4"
 	default:
-		return CCLogEndOutcomeUnknown, fmt.Errorf("unknown outcome: %s", s)
+		return "Unknown"
+	}
+}
+
+func ParsePValue(v int) (res CCLogEndOutcome, err error) {
+	switch v {
+	case 1:
+		return CCLogEndOutcomeP1, nil
+	case 2:
+		return CCLogEndOutcomeP2, nil
+	case 3:
+		return CCLogEndOutcomeP3, nil
+	case 4:
+		return CCLogEndOutcomeP4, nil
+	default:
+		return CCLogEndOutcomeUnknown, fmt.Errorf("unknown p value: %d", v)
 	}
 }
 

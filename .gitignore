@@ -5,3 +5,4 @@ bin/
 data*/
 cases/
 temp.json
+dist/

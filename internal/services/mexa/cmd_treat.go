@@ -52,17 +52,34 @@ func (s *Service) callbackTreatEnd(ctx context.Context, u chatdomain.Update) (er
 			return err
 		}
 
-		ikb := [][]chatdomain.InlineKeyboardEntry{
-			{
-				{
-					Text:         "Success",
-					CallbackData: fmt.Sprintf("%s::result:%d:success", treatEndPrefix, casualtyId),
-				},
-				{
-					Text:         "Failure",
-					CallbackData: fmt.Sprintf("%s::result:%d:failure", treatEndPrefix, casualtyId),
-				},
-			},
+		//ikb := [][]chatdomain.InlineKeyboardEntry{
+		//	{
+		//		{
+		//			Text:         "Success",
+		//			CallbackData: fmt.Sprintf("%s::result:%d:success", treatEndPrefix, casualtyId),
+		//		},
+		//		{
+		//			Text:         "Failure",
+		//			CallbackData: fmt.Sprintf("%s::result:%d:failure", treatEndPrefix, casualtyId),
+		//		},
+		//	},
+		//}
+		var ikb [][]chatdomain.InlineKeyboardEntry
+
+		const kbWidth = 2
+		const kbHeight = 2
+		for i := 0; i < kbHeight; i++ {
+			kb := make([]chatdomain.InlineKeyboardEntry, 0, kbWidth)
+
+			for j := 0; j < kbWidth; j++ {
+				p := i*kbWidth + j + 1
+				kb = append(kb, chatdomain.InlineKeyboardEntry{
+					Text:         fmt.Sprintf("P%d", p),
+					CallbackData: fmt.Sprintf("%s::result:%d:%d", treatEndPrefix, casualtyId, p),
+				})
+			}
+
+			ikb = append(ikb, kb)
 		}
 
 		return s.bot.Reply(ctx, u.ChatId(), "Please submit the outcome of treatment", chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
@@ -70,20 +87,27 @@ func (s *Service) callbackTreatEnd(ctx context.Context, u chatdomain.Update) (er
 		}))
 	} else if strings.HasPrefix(data, "result:") {
 		casualtyIdStr := strings.TrimPrefix(data, "result:")
-		success := false
-		casualtyIdStr, success = strings.CutSuffix(casualtyIdStr, ":success")
-		casualtyIdStr = strings.TrimSuffix(casualtyIdStr, ":failure")
+
+		items := strings.Split(casualtyIdStr, ":")
+		if len(items) != 2 {
+			return fmt.Errorf("invalid treat end callback data: %s", data)
+		}
+
+		casualtyIdStr, outcomeStr := items[0], items[1]
 
 		casualtyId, err := strconv.Atoi(casualtyIdStr)
 		if err != nil {
 			return err
 		}
 
-		var outcome mexadomain.CCLogEndOutcome
-		if success {
-			outcome = mexadomain.CCLogEndOutcomeSuccess
-		} else {
-			outcome = mexadomain.CCLogEndOutcomeFailure
+		pValue, err := strconv.Atoi(outcomeStr)
+		if err != nil {
+			return err
+		}
+
+		outcome, err := mexadomain.ParsePValue(pValue)
+		if err != nil {
+			return err
 		}
 
 		err = s.repos.CCLogs.AddLog(ctx, casualtyId, mexadomain.CCLogTypeTreatEnd, mexadomain.CCLogValue{

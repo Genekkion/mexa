@@ -160,5 +160,17 @@ func (s *Service) callbackAttachCaseSelect(ctx context.Context, u chatdomain.Upd
 
 	s.fsm.SetUserState(u.UserId(), fsmports.UserStateDefault)
 
-	return s.bot.Reply(ctx, u.ChatId(), "Case attached successfully")
+	c, err := s.repos.Cases.GetCase(ctx, s.Exercise().Id, caseId)
+	if err != nil {
+		return err
+	}
+
+	kb, err := s.kbCasualtyCheckCasualty(ctx, u, cadet4d)
+	if err != nil {
+		return err
+	}
+
+	return s.bot.Reply(ctx, u.ChatId(), c.TgMd2(), chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
+		InlineKeyboard: kb,
+	}))
 }
