@@ -95,6 +95,7 @@ func (s *Service) callbackAttachCase(ctx context.Context, u chatdomain.Update) (
 }
 
 func (s *Service) callbackAttachCaseConfirm(ctx context.Context, u chatdomain.Update, data string) (err error) {
+	data = strings.TrimPrefix(data, "confirm:")
 	arr := strings.Split(data, ":")
 	if len(arr) != 2 {
 		return fmt.Errorf("invalid confirm callback data: %s", data)
