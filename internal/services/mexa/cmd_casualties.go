@@ -194,6 +194,45 @@ func (s *Service) kbCasualtyCheckCasualty(ctx context.Context, _ chatdomain.Upda
 	return res, nil
 }
 
+func (s *Service) handleCasualtyCheck(ctx context.Context, u chatdomain.Update, cadet4d mexadomain.Cadet4D) (err error) {
+	c, err := s.repos.Casualties.GetCasualtyBy4D(ctx, s.Exercise().Id, cadet4d)
+	if err != nil {
+		return err
+	}
+
+	det, err := s.repos.Deterioration.GetDeteriorationByCasualty(ctx, c.Id)
+	if err != nil {
+		return err
+	}
+
+	cs, err := s.repos.Cases.GetCase(ctx, s.Exercise().Id, c.CaseId)
+	if err != nil {
+		return err
+	}
+
+	strs := []string{
+		cs.TgMd2(),
+		"__*Deterioration*__",
+		"",
+	}
+	if len(det) > 0 {
+		for _, d := range det {
+			strs = append(strs, d.Value, "")
+		}
+	} else {
+		strs = append(strs, "None")
+	}
+
+	ikb, err := s.kbCasualtyCheckCasualty(ctx, u, c.Id)
+	if err != nil {
+		return err
+	}
+
+	return s.bot.Reply(ctx, u.ChatId(), strings.Join(strs, "\n"), chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
+		InlineKeyboard: ikb,
+	}))
+}
+
 func (s *Service) callbackCasualtyCheck(ctx context.Context, u chatdomain.Update) (err error) {
 	data := strings.TrimPrefix(u.CallbackQuery.Data, casualtyCheckPrefix+"::")
 	if strings.HasPrefix(data, "open:") {
@@ -202,42 +241,7 @@ func (s *Service) callbackCasualtyCheck(ctx context.Context, u chatdomain.Update
 			return err
 		}
 
-		c, err := s.repos.Casualties.GetCasualtyBy4D(ctx, s.Exercise().Id, cadet4d)
-		if err != nil {
-			return err
-		}
-
-		det, err := s.repos.Deterioration.GetDeteriorationByCasualty(ctx, c.Id)
-		if err != nil {
-			return err
-		}
-
-		cs, err := s.repos.Cases.GetCase(ctx, s.Exercise().Id, c.CaseId)
-		if err != nil {
-			return err
-		}
-
-		strs := []string{
-			cs.TgMd2(),
-			"__*Deterioration*__",
-			"",
-		}
-		if len(det) > 0 {
-			for _, d := range det {
-				strs = append(strs, d.Value, "")
-			}
-		} else {
-			strs = append(strs, "None")
-		}
-
-		ikb, err := s.kbCasualtyCheckCasualty(ctx, u, c.Id)
-		if err != nil {
-			return err
-		}
-
-		return s.bot.Reply(ctx, u.ChatId(), strings.Join(strs, "\n"), chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
-			InlineKeyboard: ikb,
-		}))
+		return s.handleCasualtyCheck(ctx, u, cadet4d)
 	}
 
 	fmt.Println("Unknown casualty check callback:", u.CallbackQuery.Data)

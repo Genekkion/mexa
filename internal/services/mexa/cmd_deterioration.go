@@ -6,20 +6,8 @@ import (
 	chatdomain "mexa/internal/domains/chat"
 	mexadomain "mexa/internal/domains/mexa"
 	fsmports "mexa/internal/ports/fsm"
-	"regexp"
 	"strconv"
 	"strings"
-)
-
-const (
-	deteriorationPrefixMsg = "Enter deterioration reason for cadet:"
-)
-
-var (
-	deterioration4dRegex = regexp.MustCompile(fmt.Sprintf(
-		`^%s\s(\d{4})$`,
-		regexp.QuoteMeta(deteriorationPrefixMsg),
-	))
 )
 
 func (s *Service) callbackDeterioration(ctx context.Context, u chatdomain.Update) (err error) {
@@ -53,10 +41,15 @@ func (s *Service) handleTextAddDeterioration(ctx context.Context, u chatdomain.U
 
 	casualtyId := casualtyIdAny.(mexadomain.CasualtyId)
 
+	casualty, err := s.repos.Casualties.GetCasualtyById(ctx, s.Exercise().Id, casualtyId)
+	if err != nil {
+		return err
+	}
+
 	_, err = s.repos.Deterioration.AddDeterioration(ctx, casualtyId, strings.TrimSpace(u.Message.Text))
 	if err != nil {
 		return err
 	}
 
-	return s.bot.Reply(ctx, u.ChatId(), "Deterioration added")
+	return s.handleCasualtyCheck(ctx, u, casualty.FourD)
 }

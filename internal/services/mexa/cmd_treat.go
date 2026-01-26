@@ -24,20 +24,12 @@ func (s *Service) callbackTreatStart(ctx context.Context, u chatdomain.Update) (
 			return err
 		}
 
-		err = s.bot.Reply(ctx, u.ChatId(), "Treatment started")
+		casualty, err := s.repos.Casualties.GetCasualtyById(ctx, s.Exercise().Id, casualtyId)
 		if err != nil {
 			return err
 		}
 
-		ikb, err := s.kbCasualtyCheckCasualty(ctx, u, casualtyId)
-		if err != nil {
-			return err
-		}
-
-		// TODO: GETTING 400 FROM BELOW
-		return s.bot.EditMessage(ctx, u.ChatId(), u.CallbackQuery.Message.MessageId, u.CallbackQuery.Message.Text, chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
-			InlineKeyboard: ikb,
-		}))
+		return s.handleCasualtyCheck(ctx, u, casualty.FourD)
 	}
 
 	fmt.Printf("Unknown treat start callback: %s\n", u.CallbackQuery.Data)
@@ -52,18 +44,6 @@ func (s *Service) callbackTreatEnd(ctx context.Context, u chatdomain.Update) (er
 			return err
 		}
 
-		//ikb := [][]chatdomain.InlineKeyboardEntry{
-		//	{
-		//		{
-		//			Text:         "Success",
-		//			CallbackData: fmt.Sprintf("%s::result:%d:success", treatEndPrefix, casualtyId),
-		//		},
-		//		{
-		//			Text:         "Failure",
-		//			CallbackData: fmt.Sprintf("%s::result:%d:failure", treatEndPrefix, casualtyId),
-		//		},
-		//	},
-		//}
 		var ikb [][]chatdomain.InlineKeyboardEntry
 
 		const kbWidth = 2
