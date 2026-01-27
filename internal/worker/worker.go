@@ -35,7 +35,10 @@ func (w *Worker) Start(ctx context.Context) (err error) {
 			var updates []chatdomain.Update
 			updates, err = w.bot.GetUpdates()
 			if err != nil {
-				return err
+				fmt.Printf("Error getting updates: %v\n", err)
+				timer.Reset(time.Second)
+				continue
+				//return err
 			}
 
 			for _, u := range updates {

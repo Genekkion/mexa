@@ -217,7 +217,10 @@ func (s *Service) handleCasualtyCheck(ctx context.Context, u chatdomain.Update, 
 	}
 	if len(det) > 0 {
 		for _, d := range det {
-			strs = append(strs, d.Value, "")
+			strs = append(strs,
+				utils.EscapeMd2(d.Value),
+				"",
+			)
 		}
 	} else {
 		strs = append(strs, "None")
