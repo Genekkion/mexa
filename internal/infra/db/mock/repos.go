@@ -2,7 +2,7 @@ package sqlitemock
 
 import (
 	"context"
-	mexadomain "mexa/internal/domains/mexa"
+	"mexa/internal/domains/mexa"
 	mexaports "mexa/internal/ports/db/mexa"
 )
 
@@ -113,6 +113,11 @@ type CasualtiesRepo struct {
 	GetCasualtiesByExFunc func(ctx context.Context, exerciseId int) ([]mexadomain.Casualty, error)
 	GetCasualtyByIdFunc   func(ctx context.Context, exerciseId int, casualtyId mexadomain.CasualtyId) (*mexadomain.Casualty, error)
 	GetCasualtyBy4DFunc   func(ctx context.Context, exerciseId int, cadet4D mexadomain.Cadet4D) (*mexadomain.Casualty, error)
+}
+
+func (r *CasualtiesRepo) ClearCadets(ctx context.context.Context, exerciseId int, cadet4D mexadomain.mexadomain.Cadet4D) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func (r *CasualtiesRepo) AddCasualty(ctx context.Context, exerciseId int, cadet4D mexadomain.Cadet4D, caseId mexadomain.CaseId) (*mexadomain.CasualtyId, error) {

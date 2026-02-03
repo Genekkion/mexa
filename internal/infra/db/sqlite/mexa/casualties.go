@@ -13,6 +13,12 @@ type CasualtiesRepo struct {
 	*sqlite.BaseRepo
 }
 
+func (repo *CasualtiesRepo) ClearCadet(ctx context.Context, exerciseId int, cadet4D mexadomain.Cadet4D) error {
+	const stmt = "DELETE FROM casualties WHERE exercise_id=? AND four_d=?"
+	_, err := repo.Exec(ctx, stmt, exerciseId, cadet4D)
+	return err
+}
+
 func (repo *CasualtiesRepo) GetCasualtyById(ctx context.Context, exerciseId int, casualtyId mexadomain.CasualtyId) (res *mexadomain.Casualty, err error) {
 	const stmt = "SELECT id, four_d, case_id FROM casualties WHERE exercise_id=? AND id=?"
 	res = &mexadomain.Casualty{

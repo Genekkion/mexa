@@ -29,6 +29,7 @@ func (s *Service) initCallbacks() {
 		},
 		listCasesPrefix:     s.callbackListCases,
 		attachCasePrefix:    s.callbackAttachCase,
+		detachCasePrefix:    s.callbackDetachCase,
 		casualtyCheckPrefix: s.callbackCasualtyCheck,
 		treatStartPrefix:    s.callbackTreatStart,
 		treatEndPrefix:      s.callbackTreatEnd,

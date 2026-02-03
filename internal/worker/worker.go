@@ -38,7 +38,6 @@ func (w *Worker) Start(ctx context.Context) (err error) {
 				fmt.Printf("Error getting updates: %v\n", err)
 				timer.Reset(time.Second)
 				continue
-				//return err
 			}
 
 			for _, u := range updates {

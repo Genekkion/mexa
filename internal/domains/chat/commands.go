@@ -8,4 +8,5 @@ type Command struct {
 	Text        string  `json:"command"`
 	Description string  `json:"description"`
 	Handler     Handler `json:"-"`
+	Hidden      bool    `json:"-"`
 }

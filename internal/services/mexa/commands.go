@@ -56,6 +56,12 @@ func (s *Service) initCommands(ctx context.Context) (err error) {
 			Description: "Attach case to cadet to create a new casualty",
 			Handler:     s.wrapExStarted(s.cmdAttach),
 		},
+		{
+			Text:        "detach",
+			Description: "Detach case from cadet",
+			Handler:     s.wrapExStarted(s.cmdDetach),
+			Hidden:      true,
+		},
 
 		{
 			Text:        "quit",
@@ -69,5 +75,13 @@ func (s *Service) initCommands(ctx context.Context) (err error) {
 		s.commands[cmd.Text] = cmd
 	}
 
-	return s.bot.SetupCommands(ctx, commands)
+	cmds := make([]chatdomain.Command, 0, len(commands))
+	for _, cmd := range commands {
+		if cmd.Hidden {
+			continue
+		}
+		cmds = append(cmds, cmd)
+	}
+
+	return s.bot.SetupCommands(ctx, cmds)
 }

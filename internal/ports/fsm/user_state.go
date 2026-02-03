@@ -7,4 +7,5 @@ const (
 	UserStateCheckingCasualty
 	UserStateAttachingCase
 	UserStateAddDeteriorate
+	UserStateDetachingCase
 )

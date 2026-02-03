@@ -19,6 +19,8 @@ func (s *Service) HandleText(ctx context.Context, u chatdomain.Update) (err erro
 		return s.handleTextCasualtyCheck(ctx, u)
 	case fsmports.UserStateAddDeteriorate:
 		return s.handleTextAddDeterioration(ctx, u)
+	case fsmports.UserStateDetachingCase:
+		return s.handleTextDetach(ctx, u)
 	}
 
 	fmt.Printf("Unhandled text: %s\n", u.Message.Text)

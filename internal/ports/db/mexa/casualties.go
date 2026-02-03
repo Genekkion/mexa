@@ -11,6 +11,7 @@ type CasualtiesRepo interface {
 	GetCasualtiesByEx(ctx context.Context, exerciseId int) (res []mexadomain.Casualty, err error)
 	GetCasualtyById(ctx context.Context, exerciseId int, casualtyId mexadomain.CasualtyId) (res *mexadomain.Casualty, err error)
 	GetCasualtyBy4D(ctx context.Context, exerciseId int, cadet4D mexadomain.Cadet4D) (res *mexadomain.Casualty, err error)
+	ClearCadet(ctx context.Context, exerciseId int, cadet4D mexadomain.Cadet4D) (err error)
 }
 
 type CasualtyDeteriorationRepo interface {

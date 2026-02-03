@@ -12,6 +12,7 @@ import (
 
 const (
 	attachCaseMsg = "Attaching case for cadet:"
+	detachCaseMsg = "Detaching case for cadet:"
 )
 
 var (
@@ -19,12 +20,57 @@ var (
 		`%s\s+(\d{4})`,
 		regexp.QuoteMeta(attachCaseMsg),
 	))
+	detachCaseMsgRegex = regexp.MustCompile(fmt.Sprintf(
+		`%s\s+(\d{4})`,
+		regexp.QuoteMeta(detachCaseMsg),
+	))
 )
 
 func (s *Service) cmdAttach(ctx context.Context, u chatdomain.Update) (err error) {
 	s.fsm.SetUserState(u.UserId(), fsmports.UserStateAttachingCase)
 
 	return s.bot.Reply(ctx, u.ChatId(), "Enter Cadet's 4D number")
+}
+
+func (s *Service) cmdDetach(ctx context.Context, u chatdomain.Update) (err error) {
+	s.fsm.SetUserState(u.UserId(), fsmports.UserStateDetachingCase)
+
+	return s.bot.Reply(ctx, u.ChatId(), "Enter Cadet's 4D number to detach")
+}
+
+func (s *Service) handleTextDetach(ctx context.Context, u chatdomain.Update) error {
+	cadet4dStr := strings.TrimSpace(u.Message.Text)
+	matched := fourDRegex.MatchString(cadet4dStr)
+	if !matched {
+		return s.bot.Reply(ctx, u.ChatId(), "Invalid 4D number, please enter again")
+	}
+
+	cadet4d, _ := strconv.Atoi(cadet4dStr)
+
+	c, err := s.repos.Casualties.GetCasualtyBy4D(ctx, s.Exercise().Id, cadet4d)
+	if err != nil {
+		return s.bot.Reply(ctx, u.ChatId(), "No casualty found with this 4D number")
+	}
+
+	cs, err := s.repos.Cases.GetCase(ctx, s.Exercise().Id, c.CaseId)
+	if err != nil {
+		return err
+	}
+
+	str := fmt.Sprintf("%s %s\n\n%s", detachCaseMsg, cadet4dStr, cs.TgMd2())
+
+	kb := [][]chatdomain.InlineKeyboardEntry{
+		{
+			{
+				Text:         "Confirm Detach",
+				CallbackData: fmt.Sprintf("%s::confirm:%d", detachCasePrefix, cadet4d),
+			},
+		},
+	}
+
+	return s.bot.Reply(ctx, u.ChatId(), str, chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
+		InlineKeyboard: kb,
+	}))
 }
 
 func (s *Service) handleTextAttach(ctx context.Context, u chatdomain.Update) error {
@@ -81,6 +127,33 @@ func (s *Service) handleTextAttach(ctx context.Context, u chatdomain.Update) err
 	}))
 }
 
+func (s *Service) callbackDetachCase(ctx context.Context, u chatdomain.Update) (err error) {
+	data := strings.TrimPrefix(u.CallbackQuery.Data, detachCasePrefix+"::")
+	if strings.HasPrefix(data, "confirm:") {
+		return s.callbackDetachCaseConfirm(ctx, u, data)
+	}
+
+	fmt.Println("Unknown detach case callback:", u.CallbackQuery.Data)
+	return nil
+}
+
+func (s *Service) callbackDetachCaseConfirm(ctx context.Context, u chatdomain.Update, data string) (err error) {
+	cadet4dStr := strings.TrimPrefix(data, "confirm:")
+	cadet4d, err := strconv.Atoi(cadet4dStr)
+	if err != nil {
+		return err
+	}
+
+	err = s.repos.Casualties.ClearCadet(ctx, s.Exercise().Id, cadet4d)
+	if err != nil {
+		return err
+	}
+
+	s.fsm.SetUserState(u.UserId(), fsmports.UserStateDefault)
+
+	return s.bot.Reply(ctx, u.ChatId(), "Case detached successfully")
+}
+
 func (s *Service) callbackAttachCase(ctx context.Context, u chatdomain.Update) (err error) {
 	data := strings.TrimPrefix(u.CallbackQuery.Data, attachCasePrefix+"::")
 	if strings.HasPrefix(data, "select:") {
@@ -91,6 +164,7 @@ func (s *Service) callbackAttachCase(ctx context.Context, u chatdomain.Update) (
 		return s.callbackAttachCaseConfirm(ctx, u, data)
 	}
 
+	fmt.Println("Unknown attach case callback:", u.CallbackQuery.Data)
 	return nil
 }
 
