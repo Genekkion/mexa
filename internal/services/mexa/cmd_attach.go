@@ -5,6 +5,7 @@ import (
 	"fmt"
 	chatdomain "mexa/internal/domains/chat"
 	fsmports "mexa/internal/ports/fsm"
+	"mexa/internal/utils"
 	"regexp"
 	"strconv"
 	"strings"
@@ -204,7 +205,7 @@ func (s *Service) callbackAttachCaseOffset(ctx context.Context, u chatdomain.Upd
 		return err
 	}
 
-	cs, str, err := s.getCasesList(ctx)
+	cs, _, err := s.getCasesList(ctx)
 	if err != nil {
 		return err
 	}
@@ -230,9 +231,12 @@ func (s *Service) callbackAttachCaseOffset(ctx context.Context, u chatdomain.Upd
 	kb = s.paginatorCaseList(offset, len(cs), attachCasePrefix)
 	ikb = append(ikb, kb)
 
-	return s.bot.EditMessage(ctx, u.ChatId(), u.CallbackQuery.Message.MessageId, str, chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
-		InlineKeyboard: ikb,
-	}))
+	return s.bot.EditMessage(ctx, u.ChatId(), u.CallbackQuery.Message.MessageId,
+		utils.EscapeMd2(u.CallbackQuery.Message.Text),
+		chatdomain.WithReplyMarkup(chatdomain.ReplyMarkup{
+			InlineKeyboard: ikb,
+		}),
+	)
 }
 
 func (s *Service) callbackAttachCaseSelect(ctx context.Context, u chatdomain.Update, data string) (err error) {
@@ -244,6 +248,7 @@ func (s *Service) callbackAttachCaseSelect(ctx context.Context, u chatdomain.Upd
 	message4dStr := attachCaseMsgRegex.FindAllStringSubmatch(u.CallbackQuery.Message.Text, 1)
 	if len(message4dStr) == 0 {
 		fmt.Println("No 4Ds found in message")
+		fmt.Println(u.CallbackQuery.Message.Text)
 		return s.bot.Reply(ctx, u.ChatId(), "Something went wrong, please try again")
 	}
 

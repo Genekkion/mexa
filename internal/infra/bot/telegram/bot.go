@@ -249,6 +249,12 @@ func (bot *Bot) EditMessage(ctx context.Context, chatId chatdomain.ChatId, messa
 	if err != nil {
 		return err
 	} else if resp.StatusCode != http.StatusOK {
+		{
+			b, err := io.ReadAll(resp.Body)
+			if err == nil {
+				fmt.Println("ERROR BODY", string(b))
+			}
+		}
 		return fmt.Errorf("editMessage: unexpected status code: %d", resp.StatusCode)
 	}
 	defer resp.Body.Close()
