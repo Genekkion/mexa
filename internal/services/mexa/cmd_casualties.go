@@ -244,6 +244,10 @@ func (s *Service) callbackCasualtyCheck(ctx context.Context, u chatdomain.Update
 			return err
 		}
 
+		if !s.fourDValidator(cadet4d) {
+			return s.bot.Reply(ctx, u.ChatId(), "Invalid 4D number, please enter again")
+		}
+
 		return s.handleCasualtyCheck(ctx, u, cadet4d)
 	}
 

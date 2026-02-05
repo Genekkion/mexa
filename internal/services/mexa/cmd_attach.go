@@ -79,6 +79,15 @@ func (s *Service) handleTextAttach(ctx context.Context, u chatdomain.Update) err
 	if !matched {
 		return s.bot.Reply(ctx, u.ChatId(), "Invalid 4D number, please enter again")
 	}
+	{
+		fourD, err := strconv.Atoi(cadet4dStr)
+		if err != nil {
+			return err
+		}
+		if !s.fourDValidator(fourD) {
+			return s.bot.Reply(ctx, u.ChatId(), "Invalid 4D number, please enter again")
+		}
+	}
 
 	cs, str, err := s.getCasesList(ctx)
 	if err != nil {

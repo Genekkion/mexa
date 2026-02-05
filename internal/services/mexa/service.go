@@ -3,6 +3,7 @@ package mexaservice
 import (
 	"context"
 	"fmt"
+	"mexa/internal/config"
 	chatdomain "mexa/internal/domains/chat"
 	mexadomain "mexa/internal/domains/mexa"
 	botports "mexa/internal/ports/bot"
@@ -16,20 +17,22 @@ type Service struct {
 	exercise mexadomain.Exercise
 	batch    mexadomain.Batch
 
-	commands  map[string]chatdomain.Command
-	callbacks map[string]chatdomain.Handler
-	admins    set.Set[chatdomain.UserId]
-	fsm       fsmports.Fsm
-	repos     Repos
+	commands       map[string]chatdomain.Command
+	callbacks      map[string]chatdomain.Handler
+	admins         set.Set[chatdomain.UserId]
+	fsm            fsmports.Fsm
+	repos          Repos
+	fourDValidator config.FourDValidator
 }
 
 type ServiceConfig struct {
-	Bot      botports.Bot
-	Exercise mexadomain.Exercise
-	Batch    mexadomain.Batch
-	Admins   []chatdomain.UserId
-	Fsm      fsmports.Fsm
-	Repos    Repos
+	Bot            botports.Bot
+	Exercise       mexadomain.Exercise
+	Batch          mexadomain.Batch
+	Admins         []chatdomain.UserId
+	Fsm            fsmports.Fsm
+	Repos          Repos
+	FourDValidator config.FourDValidator
 }
 
 func (c ServiceConfig) Validate() (err error) {
@@ -53,14 +56,15 @@ func NewService(ctx context.Context, c ServiceConfig) (ser *Service, err error) 
 	}
 
 	ser = &Service{
-		bot:       c.Bot,
-		exercise:  c.Exercise,
-		batch:     c.Batch,
-		admins:    set.New(set.WithSlice(c.Admins)),
-		commands:  make(map[string]chatdomain.Command),
-		callbacks: make(map[string]chatdomain.Handler),
-		fsm:       c.Fsm,
-		repos:     c.Repos,
+		bot:            c.Bot,
+		exercise:       c.Exercise,
+		batch:          c.Batch,
+		admins:         set.New(set.WithSlice(c.Admins)),
+		commands:       make(map[string]chatdomain.Command),
+		callbacks:      make(map[string]chatdomain.Handler),
+		fsm:            c.Fsm,
+		repos:          c.Repos,
+		fourDValidator: c.FourDValidator,
 	}
 
 	err = ser.initCommands(ctx)

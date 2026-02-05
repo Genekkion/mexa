@@ -122,12 +122,13 @@ func main() {
 		}
 
 		ser, err = mexaservice.NewService(ctx, mexaservice.ServiceConfig{
-			Bot:      bot,
-			Repos:    repos,
-			Exercise: *c.Exercise,
-			Batch:    *c.Batch,
-			Admins:   c.AdminIds,
-			Fsm:      memory.NewFsm(),
+			Bot:            bot,
+			Repos:          repos,
+			Exercise:       *c.Exercise,
+			Batch:          *c.Batch,
+			Admins:         c.AdminIds,
+			Fsm:            memory.NewFsm(),
+			FourDValidator: c.FourDValidator(),
 		})
 		if err != nil {
 			fmt.Println("Failed to create service:", err)
