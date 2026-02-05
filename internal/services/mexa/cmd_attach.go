@@ -20,10 +20,6 @@ var (
 		`%s\s+(\d{4})`,
 		regexp.QuoteMeta(attachCaseMsg),
 	))
-	detachCaseMsgRegex = regexp.MustCompile(fmt.Sprintf(
-		`%s\s+(\d{4})`,
-		regexp.QuoteMeta(detachCaseMsg),
-	))
 )
 
 func (s *Service) cmdAttach(ctx context.Context, u chatdomain.Update) (err error) {
